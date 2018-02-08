@@ -1,4 +1,4 @@
-# Binary Trees
+# Binary Trees &middot; [![CircleCI](https://circleci.com/gh/cowlingj/binary-trees/tree/master.svg?style=svg)](https://circleci.com/gh/cowlingj/binary-trees/tree/master)
 
 various types of binary tree, implemented in c.
 
