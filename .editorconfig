@@ -1,0 +1,9 @@
+[*]
+# space indentation
+indent_style = space
+indent_size = 2
+
+# tabs 2 spaces for makefiles
+[{M,m}akefile]
+indent_style = tab
+indent_size = 4
