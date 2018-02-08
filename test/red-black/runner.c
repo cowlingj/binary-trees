@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "../src/simple/binary-tree.h"
-#include "../src/utils.h"
+#include "../../src/red-black/binary-tree.h"
+#include "../../src/utils.h"
 
 tree_t *tree = NULL;
 
