@@ -174,5 +174,8 @@ int tree_free(tree_t *tree){
   if (tree == NULL){
     return 0;
   }
-  return tree_free(tree->left) || tree_free(tree->right);
+  int ret = tree_free(tree->left) || tree_free(tree->right);
+  free(tree->data);
+  free(tree);
+  return ret;
 }
