@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  simple:
+    docker:
+      - image: circleci/ruby:2.4.1
+    steps:
+      - checkout
+      - run: make test
+      - run: ./bin/test
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - simple
