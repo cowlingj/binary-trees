@@ -1,6 +1,12 @@
 CC=gcc
 CFLAGS=-Wall --pedantic -g -std=c99
 
+TEST_FILES += \
+./test/red-black/runner.c
+
+OBJ_FILES += \
+./test/red-black/runner.o
+
 # Each subdirectory must supply rules for building sources it contributes
 # since when something depends on OBJ_FILES make will ask us
 
@@ -8,7 +14,7 @@ CFLAGS=-Wall --pedantic -g -std=c99
 # $< = target
 # $@ dependencies
 
-test/%.o: test/%.c
+test/red-black/%.o: test/red-black/%.c
 	@echo 'Building file: $<'
 	${CC} ${CFLAGS} -o "$@" "$<"
 	@mv "$<" build/"$(@D)"/"$@"

@@ -4,7 +4,7 @@ various types of binary tree, implemented in c.
 
 ## Getting Started
 
-Simply call `make test` to build the test executable
+Simply call `make` with the desired implementation to build that test executable
 
 ### Prerequisites
 
@@ -13,11 +13,11 @@ Simply call `make test` to build the test executable
 
 ## Running the tests
 
-tests are run by executing the test runner executable
+tests are run by executing the appropriate test runner executable
 
 ```
-$> make test
-$> bin/test
+$> make simple
+$> bin/simple
 ```
 
 ## Authors
