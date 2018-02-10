@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall --pedantic -std=c99
+CFLAGS=-Wall --pedantic -g -std=c99
 
 # Each subdirectory must supply rules for building sources it contributes
 # since when something depends on OBJ_FILES make will ask us

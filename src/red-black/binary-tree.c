@@ -2,8 +2,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "binary-tree.h"
+#include "../utils.h"
 
 typedef enum color { RED, BLACK } color_t;
+char* colour_t_print(color_t color){
+  switch (color){
+    case RED: return "RED";
+    case BLACK: return "BLACK";
+    default: return "UNKNOWN";
+  }
+}
+typedef enum derection { LEFT, RIGHT } direction_t;
 
 struct tree {
   void* data;
@@ -28,10 +37,123 @@ bool is_red(tree_t *tree){
 }
 
 bool is_black(tree_t *tree){
-  return tree != NULL && tree->color == BLACK;
+  return tree == NULL || tree->color == BLACK;
 }
 
-tree_t* insert(void* data, size_t data_size, tree_t *tree, int (*cmp)(void*, size_t, void*, size_t)){
+size_t _get_black_height(tree_t *tree, bool root){
+  
+  size_t black_height = _get_black_height(tree->left, false)
+    + _get_black_height(tree->right, false);
+  
+  if (is_black(tree) && !root){
+    return black_height + 1;
+  }
+  return black_height; 
+}
+
+size_t get_black_height(tree_t *tree){
+  return _get_black_height(tree, true); 
+}
+
+tree_t* rotate(tree_t *tree, direction_t direction){
+  printf("ROTATE: will print tree...\n");
+  tree_printf(tree, stringify);
+  tree_t *new_parent, *demoted_child, *new_grandchild;
+  bool left_parent = tree->parent != NULL && tree->parent->left == tree;
+
+  demoted_child = tree;
+  if (direction == LEFT){
+    new_parent = tree->right;
+    new_grandchild = new_parent->left;
+
+    new_parent->left = demoted_child;
+    demoted_child->right = new_grandchild;
+
+  } else {
+    new_parent = tree->left;
+    new_grandchild = new_parent->right;
+
+    new_parent->right = demoted_child;
+    demoted_child->left = new_grandchild;
+  }
+
+  new_parent->parent = demoted_child->parent;
+  demoted_child->parent = new_parent;
+
+  if (new_parent->parent == NULL){
+    return new_parent;
+  }
+
+  if (left_parent){
+    new_parent->parent->left = new_parent;
+  } else {
+    new_parent->parent->right = new_parent;
+  }
+
+  return new_parent;
+
+}
+
+tree_t* fix(tree_t *tree){
+  if(tree == NULL){
+    return tree;
+  }
+
+  tree->left = fix(tree->left);
+  tree->right = fix(tree->right);
+
+  if(tree->parent == NULL){
+    fprintf(stderr, "FIX: tree is root\n");
+    tree->color = BLACK;
+  }
+
+  tree_t *new_root;
+
+  if (is_red(tree->left) && is_red(tree->left->right)){
+    printf("LR\n");
+    if (is_red(tree->right)){
+      tree->left->color = BLACK;
+      tree->right->color = BLACK;
+    } else {
+      new_root = rotate((rotate(tree->left, LEFT)->parent), RIGHT);
+      new_root->right->color = RED;
+    }
+  } else if (is_red(tree->left) && is_red(tree->left->left)){
+    printf("LL\n");
+    new_root = rotate(tree->parent, RIGHT);
+    new_root->right->color = RED;
+  } else if (is_red(tree->right) && is_red(tree->right->right)){
+    printf("RR\n");
+    new_root = rotate(tree->parent, LEFT);
+    new_root->left->color = RED;
+  } else if (is_red(tree->right) && is_red(tree->right->left)){
+    printf("RL\n");
+    if (is_red(tree->left)){
+      tree->left->color = BLACK;
+      tree->right->color = BLACK;
+    } else {
+      new_root = rotate((rotate(tree->right, RIGHT)->parent), LEFT);
+      new_root->left->color = RED;
+    }
+  } else {
+    tree->size = get_size(tree->left) + get_size(tree->right) + 1;
+    return tree;
+  }
+  new_root->color = BLACK;
+
+  // recalc size
+  if (new_root->left != NULL){
+    new_root->left->size = get_size(new_root->left->left) + get_size(new_root->left->right) + 1;  
+  }
+  if (new_root->right != NULL){
+    new_root->right->size = get_size(new_root->right->left) + get_size(new_root->right->right) + 1;  
+  }
+  new_root->size = get_size(new_root->left) + get_size(new_root->right) + 1;
+  
+  return new_root;
+}
+
+tree_t* _insert(void* data, size_t data_size, tree_t *tree, int (*cmp)(void*, size_t, void*, size_t)){
   if (tree == NULL){
     tree_t *ret = malloc(sizeof(tree_t));
     ret->data = data;
@@ -39,23 +161,30 @@ tree_t* insert(void* data, size_t data_size, tree_t *tree, int (*cmp)(void*, siz
     ret->left = NULL;
     ret->right = NULL;
     ret->size = 1;
-    ret->color = RED;
+    ret->color = BLACK;
+    ret->parent = NULL;
     return ret;
   }
 
   int result = cmp(data, data_size, tree->data, tree->data_size);
   if (result < 0){
     size_t old_subtree_size = get_size(tree->left);
-    tree->left = insert(data, data_size, tree->left, cmp);
+    tree->left = _insert(data, data_size, tree->left, cmp);
     tree->left->parent = tree;
+    if (tree->left->left == NULL && tree->left->right == NULL){
+      tree->left->color = RED;
+    }
     if (old_subtree_size != get_size(tree->left)){
       tree->size = 1 + get_size(tree->left) + get_size(tree->right);
     }
   }
   if (result > 0){
     size_t old_subtree_size = get_size(tree->right);
-    tree->right = insert(data, data_size, tree->right, cmp);
+    tree->right = _insert(data, data_size, tree->right, cmp);
     tree->right->parent = tree;
+    if (tree->right->left == NULL && tree->right->right == NULL){
+      tree->right->color = RED;
+    }
     if (old_subtree_size != get_size(tree->right)){
       tree->size = 1 + get_size(tree->left) + get_size(tree->right);
     }
@@ -64,34 +193,10 @@ tree_t* insert(void* data, size_t data_size, tree_t *tree, int (*cmp)(void*, siz
   return tree;
 }
 
-tree_t* insert_subtree(tree_t *subtree, tree_t *tree, int (*cmp)(void*, size_t, void*, size_t)){
-  if (subtree == NULL){
-    return tree;
-  }
-  if (tree == NULL){
-    return subtree;
-  }
-
-  int result = cmp(subtree->data, subtree->data_size, tree->data, tree->data_size);
-  if (result < 0){
-    size_t old_subtree_size = get_size(tree->left);
-    tree->left = insert_subtree(subtree, tree->left, cmp);
-    tree->left->parent = tree;
-    if (old_subtree_size != get_size(tree->left)){
-      tree->size = 1 + get_size(tree->left) + get_size(tree->right);
-    }
-  }
-  if (result > 0){
-    size_t old_subtree_size = get_size(tree->right);
-    tree->right = insert_subtree(subtree, tree->right, cmp);
-    tree->right->parent = tree;
-    if (old_subtree_size != get_size(tree->right)){
-      tree->size = 1 + get_size(tree->left) + get_size(tree->right);
-    }
-  }
-  // if result == 0, ignore
-  return tree;
+tree_t* insert(void* data, size_t data_size, tree_t *tree, int (*cmp)(void*, size_t, void*, size_t)){
+    return fix(_insert(data, data_size, tree, cmp));
 }
+
 
 tree_t* get(void* data, size_t data_size, tree_t* tree, int (*cmp)(void*, size_t, void*, size_t)){
   if (tree == NULL){
@@ -116,10 +221,11 @@ bool find(void* data, size_t data_size, tree_t* tree, int (*cmp)(void*, size_t, 
 int ftree_printf(FILE *file, tree_t *tree, char* (*stringify)(void*, size_t)){
   if (tree == NULL) { return 0; }
 
-  fprintf(file,"tree[%p]: { data: \"%s\", left[%p], right[%p], parent[%p], size[%lu] }\n",
+  fprintf(file,"tree[%p]: { data: \"%s\", left[%p], right[%p], parent[%p],"
+          " size[%lu], color[%s] }\n",
           (void *) tree, stringify(tree->data, tree->data_size),
           (void *) tree->left, (void *)  tree->right, (void *)  tree->parent,
-          tree->size);
+          tree->size, colour_t_print(tree->color));
   return ftree_printf(file, tree->left, stringify)
     || ftree_printf(file, tree->right, stringify);
 }
@@ -128,63 +234,12 @@ int tree_printf(tree_t *tree, char* (*stringify)(void*, size_t)){
   return ftree_printf(stdout, tree, stringify);
 }
 
-tree_t* tree_remove(void* data, size_t data_size, tree_t* tree, int (*cmp)(void*, size_t, void*, size_t)){
-  tree_t *to_remove = get(data, data_size, tree, cmp);
-  if (to_remove == NULL){
-    return NULL;
-  }
-  
-  size_t left_size = get_size(to_remove->left);
-  size_t right_size = get_size(to_remove->right);
-
-  if (to_remove->parent == NULL){
-    if (left_size >= right_size){
-      *tree = *to_remove->left;
-      *tree = *insert_subtree(to_remove->right, tree, cmp);
-    }
-    if (left_size < right_size){
-      *tree = *to_remove->right;
-      *tree = *insert_subtree(to_remove->right, tree, cmp);
-    }
-
-    to_remove->left = NULL;
-    to_remove->right = NULL;
-    to_remove->parent = NULL;
-    to_remove->size = 1;
-
-    return to_remove;
-  }
-
-  // to remove tree t, we need to disconnect it from its parent p,
-  // so we must find out which child of p is t
-  bool left_child = to_remove->parent->left == to_remove;
-
-  // move the larger tree up and insert the smaller one into the larger one
-  if (left_child && left_size >= right_size){
-    to_remove->parent->left = to_remove->left;
-    to_remove->left = insert_subtree(to_remove->right, to_remove->left, cmp);
-  } else if (left_child && left_size < right_size){
-    to_remove->parent->left = to_remove->right;
-    to_remove->right = insert_subtree(to_remove->left, to_remove->right, cmp);
-  } else if (!left_child && left_size >= right_size){
-    to_remove->parent->right = to_remove->left;
-    to_remove->left = insert_subtree(to_remove->right, to_remove->left, cmp);
-  } else {
-    to_remove->parent->right = to_remove->right;
-    to_remove->right = insert_subtree(to_remove->left, to_remove->right, cmp);
-  }
-
-  to_remove->left = NULL;
-  to_remove->right = NULL;
-  to_remove->parent = NULL;
-  to_remove->size = 1;
-
-  return to_remove;
-}
-
 int tree_free(tree_t *tree){
   if (tree == NULL){
     return 0;
   }
-  return tree_free(tree->left) || tree_free(tree->right);
+  int ret = tree_free(tree->left) || tree_free(tree->right);
+  free(tree->data);
+  free(tree);
+  return ret;
 }

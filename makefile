@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall --pedantic -std=c99
+CFLAGS=-Wall --pedantic -g -std=c99
 
 .PHONY: simple clean red-black list
 
@@ -19,7 +19,7 @@ simple: src/simple/binary-tree.c src/utils.c test/simple/runner.c
 	${CC} ${CFLAGS} ${SRC_FILES} ${TEST_FILES} -o bin/simple
 	@echo "complete"
 
-red-black: src/simple/binary-tree.c src/utils.c test/simple/runner.c
+red-black: src/red-black/binary-tree.c src/utils.c test/red-black/runner.c
 	${CC} ${CFLAGS} ${SRC_FILES} ${TEST_FILES} -o bin/red-black
 	@echo "complete"
 
@@ -30,7 +30,7 @@ clean:
 
 list:
 	@echo -e "make:"\
-"\n\tlist - show available targets"\
-"\n\tclean - removes executables and intermedary files"\
-"\n\tred-black - builds the tests for a red-black tree"\
-"\n\tsimple - builds the tests for a simple (unbalanced binary tree)"
+	"\n\tlist - show available targets"\
+	"\n\tclean - removes executables and intermedary files"\
+	"\n\tred-black - builds the tests for a red-black tree"\
+	"\n\tsimple - builds the tests for a simple (unbalanced binary tree)"

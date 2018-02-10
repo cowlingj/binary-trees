@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall --pedantic -std=c99
+CFLAGS=-Wall --pedantic -g -std=c99
 
 TEST_FILES += \
 ./test/simple/runner.c

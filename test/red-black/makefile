@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall --pedantic -std=c99
+CFLAGS=-Wall --pedantic -g -std=c99
 
 TEST_FILES += \
 ./test/red-black/runner.c
@@ -14,7 +14,7 @@ OBJ_FILES += \
 # $< = target
 # $@ dependencies
 
-test/simple/%.o: test/simple/%.c
+test/red-black/%.o: test/red-black/%.c
 	@echo 'Building file: $<'
 	${CC} ${CFLAGS} -o "$@" "$<"
 	@mv "$<" build/"$(@D)"/"$@"
